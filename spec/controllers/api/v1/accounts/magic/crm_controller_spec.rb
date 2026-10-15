@@ -32,6 +32,8 @@ RSpec.describe 'Magic CRM API', type: :request do
       card = cards.find { |c| c['contact_id'] == contact.id }
       expect(card['custom_attributes']['etapa']).to eq('Respondió')
       expect(card['labels']).to contain_exactly('anuncio', 'jp-agent')
+      expect(card['status']).to eq('open')
+      expect(card).to include('channel', 'inbox_id', 'assignee_id', 'conversation_attributes', 'last_message')
     end
 
     it 'only shows agents the contacts of their inboxes' do
