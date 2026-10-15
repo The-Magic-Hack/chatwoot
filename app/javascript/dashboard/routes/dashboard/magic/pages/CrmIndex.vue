@@ -11,6 +11,7 @@ import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
 import ConversationAPI from 'dashboard/api/inbox/conversation';
 import ContactAPI from 'dashboard/api/contacts';
+import { getCachedCards, setCachedCards } from '../crmCache';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
@@ -41,7 +42,7 @@ const router = useRouter();
 const accountId = useMapGetter('getCurrentAccountId');
 const attributesByModel = useMapGetter('attributes/getAttributesByModel');
 
-const cards = ref([]);
+const cards = ref(getCachedCards());
 const isLoading = ref(true);
 const mode = ref('kanban');
 const origin = ref('');
@@ -80,27 +81,50 @@ const toCard = conversation => {
   };
 };
 
+const sortCards = list =>
+  [...list].sort((a, b) => b.lastActivity - a.lastActivity);
+
+// Chatwoot tarda segundos por página de conversaciones: se piden varias a la vez y el
+// tablero se va llenando con cada una, en vez de esperar a la última.
+const PARALLEL = 4;
+
 const load = async () => {
   isLoading.value = true;
   const byContact = new Map();
+  const absorb = payload => {
+    payload.forEach(conversation => {
+      const card = toCard(conversation);
+      if (!card) return;
+      const seen = byContact.get(card.contactId);
+      if (!seen || card.lastActivity > seen.lastActivity) {
+        byContact.set(card.contactId, card);
+      }
+    });
+  };
+  const fetchPage = async page => {
+    const { data } = await ConversationAPI.get({ status: 'all', page });
+    return data?.data || {};
+  };
   try {
-    for (let page = 1; page <= MAX_PAGES; page += 1) {
-      // eslint-disable-next-line no-await-in-loop
-      const { data } = await ConversationAPI.get({ status: 'all', page });
-      const payload = data?.data?.payload || [];
-      payload.forEach(conversation => {
-        const card = toCard(conversation);
-        if (!card) return;
-        const seen = byContact.get(card.contactId);
-        if (!seen || card.lastActivity > seen.lastActivity) {
-          byContact.set(card.contactId, card);
-        }
-      });
-      if (payload.length < PAGE_SIZE) break;
-    }
-    cards.value = [...byContact.values()].sort(
-      (a, b) => b.lastActivity - a.lastActivity
-    );
+    const first = await fetchPage(1);
+    absorb(first.payload || []);
+    const total = Number(first.meta?.all_count) || 0;
+    const pages = Math.min(MAX_PAGES, Math.ceil(total / PAGE_SIZE));
+    if (!getCachedCards().length) cards.value = sortCards(byContact.values());
+    const pending = [];
+    for (let page = 2; page <= pages; page += 1) pending.push(page);
+    const worker = async () => {
+      while (pending.length) {
+        const page = pending.shift();
+        // eslint-disable-next-line no-await-in-loop
+        const data = await fetchPage(page);
+        absorb(data.payload || []);
+        if (!getCachedCards().length) cards.value = sortCards(byContact.values());
+      }
+    };
+    await Promise.all(Array.from({ length: PARALLEL }, worker));
+    cards.value = sortCards(byContact.values());
+    setCachedCards(cards.value);
   } catch (error) {
     useAlert('No se pudieron cargar los leads. Reintenta.');
   } finally {
