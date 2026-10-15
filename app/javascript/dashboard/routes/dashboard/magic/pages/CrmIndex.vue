@@ -9,9 +9,9 @@ import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useMapGetter, useStore } from 'dashboard/composables/store';
 import { useAlert } from 'dashboard/composables';
-import ConversationAPI from 'dashboard/api/inbox/conversation';
 import ContactAPI from 'dashboard/api/contacts';
 import { getCachedCards, setCachedCards } from '../crmCache';
+import MagicCrmAPI from '../crmApi';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
@@ -34,8 +34,6 @@ const STAGE_HELP = {
   Win: 'Pagó',
   Lost: 'No le interesa',
 };
-const PAGE_SIZE = 25;
-const MAX_PAGES = 40;
 
 const store = useStore();
 const router = useRouter();
@@ -58,72 +56,32 @@ const stages = computed(() => {
   return Array.isArray(values) && values.length ? values : FALLBACK_STAGES;
 });
 
-const toCard = conversation => {
-  const sender = conversation.meta?.sender;
-  if (!sender?.id) return null;
-  const attrs = sender.custom_attributes || {};
-  const labels = conversation.labels || [];
+const toCard = row => {
+  const attrs = row.custom_attributes || {};
+  const labels = row.labels || [];
   let source = '';
   if (labels.includes('anuncio') || attrs.lead_type === 'Campaña') source = 'pauta';
   else if (labels.includes('organico') || attrs.lead_type) source = 'organico';
   return {
-    contactId: sender.id,
-    conversationId: conversation.id,
-    name: sender.name || '(sin nombre)',
-    thumbnail: sender.thumbnail || '',
-    instagram: sender.additional_attributes?.social_profiles?.instagram || '',
+    contactId: row.contact_id,
+    conversationId: row.conversation_id,
+    name: row.name || '(sin nombre)',
+    thumbnail: row.thumbnail || '',
+    instagram: row.instagram || '',
     stage: attrs[STAGE_ATTR] || '',
     since: attrs[SINCE_ATTR] || '',
     origin: source,
     ad: attrs.anuncio || '',
     agent: labels.includes('jp-agent'),
-    lastActivity: conversation.last_activity_at || conversation.timestamp || 0,
+    lastActivity: row.last_activity_at || 0,
   };
 };
 
-const sortCards = list =>
-  [...list].sort((a, b) => b.lastActivity - a.lastActivity);
-
-// Chatwoot tarda segundos por página de conversaciones: se piden varias a la vez y el
-// tablero se va llenando con cada una, en vez de esperar a la última.
-const PARALLEL = 4;
-
 const load = async () => {
   isLoading.value = true;
-  const byContact = new Map();
-  const absorb = payload => {
-    payload.forEach(conversation => {
-      const card = toCard(conversation);
-      if (!card) return;
-      const seen = byContact.get(card.contactId);
-      if (!seen || card.lastActivity > seen.lastActivity) {
-        byContact.set(card.contactId, card);
-      }
-    });
-  };
-  const fetchPage = async page => {
-    const { data } = await ConversationAPI.get({ status: 'all', page });
-    return data?.data || {};
-  };
   try {
-    const first = await fetchPage(1);
-    absorb(first.payload || []);
-    const total = Number(first.meta?.all_count) || 0;
-    const pages = Math.min(MAX_PAGES, Math.ceil(total / PAGE_SIZE));
-    if (!getCachedCards().length) cards.value = sortCards(byContact.values());
-    const pending = [];
-    for (let page = 2; page <= pages; page += 1) pending.push(page);
-    const worker = async () => {
-      while (pending.length) {
-        const page = pending.shift();
-        // eslint-disable-next-line no-await-in-loop
-        const data = await fetchPage(page);
-        absorb(data.payload || []);
-        if (!getCachedCards().length) cards.value = sortCards(byContact.values());
-      }
-    };
-    await Promise.all(Array.from({ length: PARALLEL }, worker));
-    cards.value = sortCards(byContact.values());
+    const { data } = await MagicCrmAPI.cards();
+    cards.value = (data?.payload || []).map(toCard);
     setCachedCards(cards.value);
   } catch (error) {
     useAlert('No se pudieron cargar los leads. Reintenta.');
