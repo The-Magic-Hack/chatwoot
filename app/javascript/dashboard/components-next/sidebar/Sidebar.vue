@@ -619,10 +619,10 @@ const menuItems = computed(() => {
     },
     {
       name: 'MagicAgent',
-      label: 'Agente JP',
+      label: 'Agentes',
       icon: 'i-lucide-bot',
-      to: accountScopedRoute('magic_agent_panel'),
-      activeOn: ['magic_agent_panel'],
+      to: accountScopedRoute('magic_agents_index'),
+      activeOn: ['magic_agents_index', 'magic_agent_panel'],
     },
     {
       name: 'Contacts',

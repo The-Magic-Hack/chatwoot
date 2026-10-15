@@ -5,6 +5,7 @@ import { frontendURL } from '../../../helper/URLHelper';
 import CrmIndex from './pages/CrmIndex.vue';
 import AgentPanel from './pages/AgentPanel.vue';
 import WorkflowsIndex from './pages/WorkflowsIndex.vue';
+import AgentsIndex from './pages/AgentsIndex.vue';
 
 export const routes = [
   {
@@ -17,6 +18,12 @@ export const routes = [
     path: frontendURL('accounts/:accountId/workflows'),
     name: 'magic_workflows_index',
     component: WorkflowsIndex,
+    meta: { permissions: ['administrator'] },
+  },
+  {
+    path: frontendURL('accounts/:accountId/agentes'),
+    name: 'magic_agents_index',
+    component: AgentsIndex,
     meta: { permissions: ['administrator'] },
   },
   {
