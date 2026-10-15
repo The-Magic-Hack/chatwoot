@@ -15,6 +15,7 @@ import MagicCrmAPI from '../crmApi';
 import Avatar from 'dashboard/components-next/avatar/Avatar.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
+import FunnelReport from '../components/FunnelReport.vue';
 
 const STAGE_ATTR = 'etapa';
 const SINCE_ATTR = 'etapa_desde';
@@ -172,6 +173,7 @@ onMounted(() => {
               v-for="option in [
                 { value: 'kanban', label: 'Kanban' },
                 { value: 'lista', label: 'Lista' },
+                { value: 'embudo', label: 'Embudo' },
               ]"
               :key="option.value"
               type="button"
@@ -319,6 +321,9 @@ onMounted(() => {
       </section>
     </main>
 
+    <FunnelReport
+      v-else-if="mode === 'embudo'"
+      :cards="visible" />
     <main v-else class="flex-1 px-6 py-4 overflow-auto">
       <table class="w-full text-sm">
         <thead>
