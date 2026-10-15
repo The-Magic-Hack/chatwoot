@@ -31,7 +31,7 @@ class Api::V1::Accounts::Magic::CrmController < Api::V1::Accounts::BaseControlle
 
     Message.where(conversation_id: conversation_ids)
            .where.not(message_type: :activity)
-           .select('DISTINCT ON (conversation_id) conversation_id, message_type, private, created_at')
+           .select('DISTINCT ON (conversation_id) conversation_id, message_type, private, created_at, content')
            .reorder(:conversation_id, created_at: :desc, id: :desc)
            .index_by(&:conversation_id)
   end
@@ -55,7 +55,8 @@ class Api::V1::Accounts::Magic::CrmController < Api::V1::Accounts::BaseControlle
       last_message: last_message && {
         message_type: Message.message_types[last_message.message_type],
         private: last_message.private,
-        created_at: last_message.created_at.to_i
+        created_at: last_message.created_at.to_i,
+        content: last_message.content.to_s.truncate(500)
       }
     }
   end
