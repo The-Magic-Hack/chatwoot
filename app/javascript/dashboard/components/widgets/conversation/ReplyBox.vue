@@ -61,6 +61,10 @@ import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
 import { FEATURE_FLAGS } from 'dashboard/featureFlags';
 import { LocalStorage } from 'shared/helpers/localStorage';
 import { emitter } from 'shared/helpers/mitt';
+import {
+  MAGIC_GET_REPLY,
+  MAGIC_SET_REPLY,
+} from 'dashboard/routes/dashboard/magic/replyBus';
 const EmojiIconPicker = defineAsyncComponent(
   () =>
     import('dashboard/components-next/emoji-icon-picker/EmojiIconPicker.vue')
@@ -627,6 +631,9 @@ export default {
       this.onNewConversationModalActive
     );
     emitter.on(CMD_AI_ASSIST, this.executeCopilotAction);
+    // El Capitán (routes/dashboard/magic) lee y reemplaza el borrador por estos eventos.
+    emitter.on(MAGIC_GET_REPLY, this.magicGetReply);
+    emitter.on(MAGIC_SET_REPLY, this.magicSetReply);
   },
   unmounted() {
     document.removeEventListener('paste', this.onPaste);
@@ -636,8 +643,16 @@ export default {
       this.onNewConversationModalActive
     );
     emitter.off(CMD_AI_ASSIST, this.executeCopilotAction);
+    emitter.off(MAGIC_GET_REPLY, this.magicGetReply);
+    emitter.off(MAGIC_SET_REPLY, this.magicSetReply);
   },
   methods: {
+    magicGetReply(callback) {
+      callback(this.message);
+    },
+    magicSetReply(text) {
+      this.message = text;
+    },
     openContactInfoTemplateModal() {
       this.requestContactInfoTemplatesOnly = true;
       this.showWhatsAppTemplatesModal = true;

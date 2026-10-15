@@ -19,11 +19,7 @@ import ConversationInfo from './ConversationInfo.vue';
 import CustomAttributes from './customAttributes/CustomAttributes.vue';
 import SharedFiles from './SharedFiles.vue';
 import Draggable from 'vuedraggable';
-import MacrosList from './Macros/List.vue';
-import ShopifyOrdersList from 'dashboard/components/widgets/conversation/ShopifyOrdersList.vue';
-import SidebarActionsHeader from 'dashboard/components-next/SidebarActionsHeader.vue';
-import LinearIssuesList from 'dashboard/components/widgets/conversation/linear/IssuesList.vue';
-import LinearSetupCTA from 'dashboard/components/widgets/conversation/linear/LinearSetupCTA.vue';
+import CapitanPanel from 'dashboard/routes/dashboard/magic/components/CapitanPanel.vue';
 
 const props = defineProps({
   conversationId: {
@@ -35,8 +31,16 @@ const props = defineProps({
     default: undefined,
   },
 });
+// The Magic Hack: la sección va en español fijo, como el resto de routes/dashboard/magic.
+const CAPITAN_TITLE = 'Capitán';
+import MacrosList from './Macros/List.vue';
+import ShopifyOrdersList from 'dashboard/components/widgets/conversation/ShopifyOrdersList.vue';
+import SidebarActionsHeader from 'dashboard/components-next/SidebarActionsHeader.vue';
+import LinearIssuesList from 'dashboard/components/widgets/conversation/linear/IssuesList.vue';
+import LinearSetupCTA from 'dashboard/components/widgets/conversation/linear/LinearSetupCTA.vue';
 
 const {
+  uiSettings,
   updateUISettings,
   isContactSidebarItemOpen,
   conversationSidebarItemsOrder,
@@ -148,6 +152,14 @@ onMounted(() => {
     />
     <ContactInfo :contact="contact" :channel-type="channelType" />
     <div class="px-2 pb-8 list-group">
+      <AccordionItem
+        :title="CAPITAN_TITLE"
+        class="mb-3"
+        :is-open="!uiSettings.is_capitan_closed"
+        @toggle="value => toggleSidebarUIState('is_capitan_closed', !value)"
+      >
+        <CapitanPanel :conversation-id="conversationId" />
+      </AccordionItem>
       <Draggable
         :list="conversationSidebarItems"
         animation="200"
