@@ -8,6 +8,8 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import WorkflowsAPI from '../workflowsApi';
+import RuleEditor from '../components/RuleEditor.vue';
+import { newRule } from '../workflowBlocks';
 
 const config = ref(null);
 const saved = ref('');
@@ -23,6 +25,16 @@ const NAMES = {
   recontacto: 'Recontacto',
   silencio: 'Silencio',
   caliente: 'Lead caliente',
+  pago: 'Pago en Stripe',
+};
+const nameOf = item =>
+  item.workflow === 'regla' ? `Regla «${item.rule}»` : NAMES[item.workflow];
+
+const addRule = () => {
+  config.value.reglas = [...(config.value.reglas || []), newRule()];
+};
+const removeRule = index => {
+  config.value.reglas.splice(index, 1);
 };
 
 const dirty = computed(
@@ -34,8 +46,8 @@ const load = async () => {
   loadError.value = '';
   try {
     const data = await WorkflowsAPI.get();
-    config.value = data.config;
-    saved.value = JSON.stringify(data.config);
+    config.value = { reglas: [], ...data.config };
+    saved.value = JSON.stringify(config.value);
     agents.value = data.agents || [];
     activity.value = data.log || [];
   } catch (error) {
@@ -49,8 +61,8 @@ const save = async () => {
   isSaving.value = true;
   try {
     const data = await WorkflowsAPI.save(config.value);
-    config.value = data.config;
-    saved.value = JSON.stringify(data.config);
+    config.value = { reglas: [], ...data.config };
+    saved.value = JSON.stringify(config.value);
     useAlert('Workflows guardados. Se aplican en la próxima vuelta (máx. 5 min).');
   } catch (error) {
     useAlert(error.message);
@@ -229,6 +241,32 @@ onMounted(load);
         </label>
       </article>
 
+      <div class="flex items-center justify-between gap-3 pt-2">
+        <div>
+          <h2 class="text-base font-medium text-n-slate-12">Reglas propias</h2>
+          <p class="text-sm text-n-slate-11 mb-0">
+            Arma tus propios workflows: cuando pase algo, si se cumplen las
+            condiciones, haz estas acciones. Cada regla actúa una sola vez por
+            cada vez que pasa.
+          </p>
+        </div>
+        <Button
+          label="Nueva regla"
+          icon="i-lucide-plus"
+          size="sm"
+          slate
+          faded
+          @click="addRule"
+        />
+      </div>
+      <RuleEditor
+        v-for="(rule, index) in config.reglas"
+        :key="rule.id"
+        v-model="config.reglas[index]"
+        :agents="agents"
+        @remove="removeRule(index)"
+      />
+
       <article
         v-if="preview"
         class="flex flex-col gap-2 p-4 rounded-xl outline outline-1 outline-n-weak"
@@ -247,7 +285,7 @@ onMounted(load);
             class="text-sm text-n-slate-12"
           >
             <strong>{{ item.name || `#${item.conversation_id}` }}</strong>
-            · {{ NAMES[item.workflow] }}: {{ item.results.join(', ') }}
+            · {{ nameOf(item) }}: {{ item.results.join(', ') }}
           </li>
         </ul>
         <p class="text-xs text-n-slate-11 mb-0">
@@ -270,7 +308,7 @@ onMounted(load);
           >
             <span class="text-n-slate-11">{{ when(item.at) }}</span>
             · <strong>{{ item.name || `#${item.conversation_id}` }}</strong> ·
-            {{ NAMES[item.workflow] }}: {{ item.results.join(', ') }}
+            {{ nameOf(item) }}: {{ item.results.join(', ') }}
           </li>
         </ul>
       </article>
