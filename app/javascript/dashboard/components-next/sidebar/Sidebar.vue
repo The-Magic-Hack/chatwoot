@@ -593,6 +593,21 @@ const menuItems = computed(() => {
           },
         ]
       : []),
+    // The Magic Hack: CRM del embudo y ajustes del agente (routes/dashboard/magic).
+    {
+      name: 'MagicCrm',
+      label: 'CRM',
+      icon: 'i-lucide-kanban',
+      to: accountScopedRoute('magic_crm_index'),
+      activeOn: ['magic_crm_index'],
+    },
+    {
+      name: 'MagicAgent',
+      label: 'Agente JP',
+      icon: 'i-lucide-bot',
+      to: accountScopedRoute('magic_agent_panel'),
+      activeOn: ['magic_agent_panel'],
+    },
     {
       name: 'Contacts',
       label: t('SIDEBAR.CONTACTS'),

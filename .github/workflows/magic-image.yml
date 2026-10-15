@@ -1,0 +1,53 @@
+# The Magic Hack: construye la imagen de Chatwoot con nuestros cambios (rama `magic`) y la
+# publica en ghcr.io/the-magic-hack/chatwoot. Igual que la imagen oficial `chatwoot/chatwoot`
+# (edición EE), solo amd64, que es la arquitectura del servidor.
+name: Magic image
+
+on:
+  push:
+    branches: [magic]
+  workflow_dispatch:
+
+concurrency:
+  group: magic-image
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/the-magic-hack/chatwoot
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Edición EE, como la imagen oficial
+        run: echo -en '\nENV CW_EDITION="ee"' >> docker/Dockerfile
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Etiquetas
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:magic
+            ${{ env.IMAGE }}:magic-${{ env.SHORT_SHA }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
