@@ -611,6 +611,13 @@ const menuItems = computed(() => {
       activeOn: ['magic_crm_index'],
     },
     {
+      name: 'MagicWorkflows',
+      label: 'Workflows',
+      icon: 'i-lucide-workflow',
+      to: accountScopedRoute('magic_workflows_index'),
+      activeOn: ['magic_workflows_index'],
+    },
+    {
       name: 'MagicAgent',
       label: 'Agente JP',
       icon: 'i-lucide-bot',

@@ -4,6 +4,7 @@ import { ROLES } from 'dashboard/constants/permissions';
 import { frontendURL } from '../../../helper/URLHelper';
 import CrmIndex from './pages/CrmIndex.vue';
 import AgentPanel from './pages/AgentPanel.vue';
+import WorkflowsIndex from './pages/WorkflowsIndex.vue';
 
 export const routes = [
   {
@@ -11,6 +12,12 @@ export const routes = [
     name: 'magic_crm_index',
     component: CrmIndex,
     meta: { permissions: [...ROLES, 'contact_manage'] },
+  },
+  {
+    path: frontendURL('accounts/:accountId/workflows'),
+    name: 'magic_workflows_index',
+    component: WorkflowsIndex,
+    meta: { permissions: ['administrator'] },
   },
   {
     path: frontendURL('accounts/:accountId/agente-jp'),
