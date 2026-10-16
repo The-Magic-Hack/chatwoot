@@ -42,5 +42,21 @@ RSpec.describe 'Magic CRM API', type: :request do
       expect(response).to have_http_status(:success)
       expect(response.parsed_body['payload'].pluck('contact_id')).to eq([contact.id])
     end
+
+    it 'derives the stage of contacts without one from who wrote last' do
+      conversation = other.conversations.first
+      create(:message, account: account, inbox: inbox_2, conversation: conversation, message_type: :incoming, created_at: 3.hours.ago)
+      create(:message, account: account, inbox: inbox_2, conversation: conversation, message_type: :outgoing, created_at: 2.hours.ago)
+      stage = lambda do
+        get "/api/v1/accounts/#{account.id}/magic/crm", headers: admin.create_new_auth_token, as: :json
+        response.parsed_body['payload'].find { |c| c['contact_id'] == other.id }['derived_stage']
+      end
+
+      expect(stage.call).to eq('Contactado')
+      create(:message, account: account, inbox: inbox_2, conversation: conversation, message_type: :outgoing, private: true)
+      expect(stage.call).to eq('Contactado')
+      create(:message, account: account, inbox: inbox_2, conversation: conversation, message_type: :incoming, created_at: 1.hour.ago)
+      expect(stage.call).to eq('Respondió')
+    end
   end
 end

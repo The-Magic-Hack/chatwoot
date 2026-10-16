@@ -245,6 +245,7 @@ watch(
         v-if="src && isImageValid"
         :src="src"
         :alt="name"
+        loading="lazy"
         @error="invalidateCurrentImage"
       />
 

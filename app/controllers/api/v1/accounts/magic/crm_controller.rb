@@ -11,8 +11,13 @@ class Api::V1::Accounts::Magic::CrmController < Api::V1::Accounts::BaseControlle
     permitted_conversations.each do |conversation|
       latest[conversation.contact_id] ||= conversation
     end
-    last_messages = last_messages_for(latest.values.map(&:id))
-    render json: { payload: latest.values.map { |conversation| card(conversation, last_messages[conversation.id]) } }
+    ids = latest.values.map(&:id)
+    last_messages = last_messages_for(ids)
+    replies = replies_for(ids)
+    cards = latest.values.map do |conversation|
+      card(conversation, last_messages[conversation.id]).merge(derived_stage: derived_stage(replies[conversation.id]))
+    end
+    render json: { payload: cards }
   end
 
   private
@@ -34,6 +39,30 @@ class Api::V1::Accounts::Magic::CrmController < Api::V1::Accounts::BaseControlle
            .select('DISTINCT ON (conversation_id) conversation_id, message_type, private, created_at, content')
            .reorder(:conversation_id, created_at: :desc, id: :desc)
            .index_by(&:conversation_id)
+  end
+
+  # Primer mensaje nuestro y última respuesta del lead de cada conversación, en una consulta.
+  def replies_for(conversation_ids)
+    return {} if conversation_ids.empty?
+
+    outgoing = Message.message_types[:outgoing]
+    incoming = Message.message_types[:incoming]
+    Message.where(conversation_id: conversation_ids, private: false, message_type: [outgoing, incoming])
+           .reorder(nil).group(:conversation_id)
+           .pluck(:conversation_id,
+                  Arel.sql("MIN(created_at) FILTER (WHERE message_type = #{outgoing})"),
+                  Arel.sql("MAX(created_at) FILTER (WHERE message_type = #{incoming})"))
+           .to_h { |id, first_out, last_in| [id, [first_out, last_in]] }
+  end
+
+  # La etapa que corresponde a un contacto sin etapa guardada. Solo el agente JP mueve la
+  # etapa; una conversación que contestó una persona del equipo no es «Lead» (escribió y
+  # nadie le ha contestado).
+  def derived_stage(reply)
+    first_out, last_in = reply
+    return 'Lead' if first_out.nil?
+
+    last_in && last_in > first_out ? 'Respondió' : 'Contactado'
   end
 
   def card(conversation, last_message)

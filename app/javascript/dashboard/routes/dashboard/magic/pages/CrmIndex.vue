@@ -69,7 +69,9 @@ const toCard = row => {
     name: row.name || '(sin nombre)',
     thumbnail: row.thumbnail || '',
     instagram: row.instagram || '',
-    stage: attrs[STAGE_ATTR] || '',
+    // Sin etapa guardada, Chatwoot la deduce de quién escribió (una persona del equipo
+    // también contesta; solo el agente guarda la etapa).
+    stage: attrs[STAGE_ATTR] || row.derived_stage || '',
     since: attrs[SINCE_ATTR] || '',
     origin: source,
     ad: attrs.anuncio || '',
