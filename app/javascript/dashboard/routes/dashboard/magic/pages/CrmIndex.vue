@@ -29,8 +29,8 @@ const FALLBACK_STAGES = [
 ];
 const STAGE_HELP = {
   Lead: 'Escribió; nadie le ha contestado',
-  Contactado: 'El agente le escribió',
-  Respondió: 'Contestó al agente',
+  Contactado: 'Le contestamos; no ha vuelto a escribir',
+  Respondió: 'Escribió después de nuestra respuesta',
   Engagement: 'Mostró intención de compra',
   Win: 'Pagó',
   Lost: 'No le interesa',
@@ -165,8 +165,8 @@ onMounted(() => {
         <div>
           <h1 class="text-xl font-medium text-n-slate-12">CRM</h1>
           <p class="mt-1 text-sm text-n-slate-11">
-            {{ visible.length }} leads. El agente los mueve solo; arrastra una
-            tarjeta o cambia su etapa para moverla a mano.
+            {{ visible.length }} leads. La etapa se actualiza sola según quién
+            escribió; arrastra una tarjeta o cambia su etapa para fijarla a mano.
           </p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -194,7 +194,7 @@ onMounted(() => {
           <select
             v-model="origin"
             aria-label="Origen"
-            class="h-8 px-2 mb-0 text-sm rounded-lg w-auto"
+            class="!h-8 !w-auto !mb-0 !py-0 !pl-2 !pr-8 text-sm rounded-lg"
           >
             <option value="">Todos los orígenes</option>
             <option value="pauta">Pauta</option>
@@ -204,7 +204,7 @@ onMounted(() => {
             v-model="query"
             type="search"
             placeholder="Buscar nombre, @usuario o anuncio"
-            class="h-8 px-2 mb-0 text-sm rounded-lg w-64"
+            class="!h-8 !w-64 !mb-0 !px-2 text-sm rounded-lg"
           />
           <Button
             label="Actualizar"

@@ -28,14 +28,14 @@ const FIELD = 'h-8 px-2 mb-0 text-sm rounded-lg';
     v-model.number="model"
     type="number"
     min="0"
-    :class="[FIELD, 'w-20']"
+    :class="[FIELD, '!w-20']"
   />
   <input
     v-else-if="props.input === 'label'"
     v-model.trim="model"
     type="text"
     placeholder="etiqueta"
-    :class="[FIELD, 'w-40']"
+    :class="[FIELD, '!w-40']"
   />
   <input
     v-else-if="props.input === 'text'"

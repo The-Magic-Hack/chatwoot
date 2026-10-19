@@ -110,6 +110,18 @@
       },
       "embed": {
         "CONTENT": "Contenido incrustado"
+      },
+      "share": {
+        "CONTENT": "Publicación compartida"
+      },
+      "story_mention": {
+        "CONTENT": "Te mencionó en su historia"
+      },
+      "ig_post": {
+        "CONTENT": "Publicación de Instagram"
+      },
+      "ig_story": {
+        "CONTENT": "Historia de Instagram"
       }
     },
     "CHAT_SORT_BY_FILTER": {

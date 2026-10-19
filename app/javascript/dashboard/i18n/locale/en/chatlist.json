@@ -110,6 +110,18 @@
       },
       "embed": {
         "CONTENT": "Embedded content"
+      },
+      "share": {
+        "CONTENT": "Shared post"
+      },
+      "story_mention": {
+        "CONTENT": "Mentioned you in their story"
+      },
+      "ig_post": {
+        "CONTENT": "Instagram post"
+      },
+      "ig_story": {
+        "CONTENT": "Instagram story"
       }
     },
     "CHAT_SORT_BY_FILTER": {

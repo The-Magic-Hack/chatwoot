@@ -32,6 +32,11 @@ const attachmentIcons = {
   file: 'i-lucide-file',
   location: 'i-lucide-map-pin',
   fallback: 'i-lucide-link-2',
+  share: 'i-ri-instagram-line',
+  story_mention: 'i-ri-instagram-line',
+  ig_reel: 'i-ri-instagram-line',
+  ig_post: 'i-ri-instagram-line',
+  ig_story: 'i-ri-instagram-line',
 };
 
 const messageByAgent = computed(() => {

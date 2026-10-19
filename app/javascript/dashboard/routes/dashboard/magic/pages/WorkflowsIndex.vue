@@ -162,7 +162,7 @@ onMounted(load);
             type="number"
             min="1"
             max="22"
-            class="w-16 h-8 px-2 mb-0 text-sm rounded-lg"
+            class="!w-16 h-8 px-2 mb-0 text-sm rounded-lg"
           />
           horas sin respuesta
         </label>
@@ -208,7 +208,7 @@ onMounted(load);
             type="number"
             min="1"
             max="30"
-            class="w-16 h-8 px-2 mb-0 text-sm rounded-lg"
+            class="!w-16 h-8 px-2 mb-0 text-sm rounded-lg"
           />
           días sin respuesta
         </label>
@@ -254,6 +254,7 @@ onMounted(load);
           label="Nueva regla"
           icon="i-lucide-plus"
           size="sm"
+          class="shrink-0"
           slate
           faded
           @click="addRule"
